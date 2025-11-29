@@ -1,4 +1,4 @@
-# Loja Online Front
+# Loja Online Front-End
 
 ## 📦 Sobre o Projeto
 
