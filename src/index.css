@@ -1,11 +1,31 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+ 
+@custom-variant dark (&:is(.dark *));
+
+* {
+  box-sizing: border-box;
+  outline: none;
+}
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
+  --ubuntu: "Ubuntu", sans-serif;
+
+  --custom-light: #F5F5F5;
+  --custom-dark: #1E1E1E;
+
+  --allbuy-blue-1: #0066c7;
+  --allbuy-blue-2: #008bfa;
+
+  --allbuy-gradient: linear-gradient(90deg, var(--allbuy-blue-1) 0%, var(--allbuy-blue-2) 100%);
+
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: var(--custom-light);
+  background-color: var(--custom-dark);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -13,17 +33,24 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+@theme {
+  --font-ubuntu: var(--ubuntu);
+
+  --color-light: var(--custom-light);
+  --color-dark: var(--custom-dark);
+  --color-allbuy-blue-1: var(--allbuy-blue-1);
+  --color-allbuy-blue-2: var(--allbuy-blue-2);
+}
+
+.allbuyGradientText {
+  background-image: var(--allbuy-gradient);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-
-  a:hover {
-    color: #747bff;
-  }
-
-  button {
-    background-color: #f9f9f9;
+    color: var(--custom-dark);
+    background-color: var(--custom-light);
   }
 }
