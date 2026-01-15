@@ -1,44 +1,73 @@
-# Loja Online – Front-End
+# React + TypeScript + Vite
 
-## 🛒 Sobre o Projeto
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-🔗 Repositório do back‑end: [https://github.com/ProjetoLojaOnline/Loja_Online](https://github.com/ProjetoLojaOnline/Loja_Online)
+Currently, two official plugins are available:
 
-### Tecnologias atuais
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-* HTML
-* CSS
-* JavaScript (Vanilla)
-* Bootstrap
+## React Compiler
 
-### Futuras implementações
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-O front‑end será migrado para um framework moderno e mais robusto, possivelmente **React**, **Vue** ou **Angular**, conforme a evolução do projeto.
+## Expanding the ESLint configuration
 
----
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-## 📂 Estrutura de Pastas
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-Atualmente o projeto está organizado da seguinte forma:
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
 
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
-│
-│   .gitignore
-│   README.md
-│   
-├───app
-│       pagina-inicial.html
-│       
-└───utils
-    └───crud
-            produtos.html
+
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
-
-### Pastas
-
-* **app/** – Contém o front‑end principal da aplicação.
-* **utils/** – Reúne arquivos de apoio e experimentação. O arquivo **produtos.html**, por exemplo, demonstra um CRUD simples para fins de estudo. Ele possui estilização básica e não conta com autenticação, portanto **não será utilizado na versão final**, mas permanece como referência para aprendizado.
-
----
-
-Sinta‑se à vontade para contribuir com ideias, melhorias ou código. Toda ajuda é bem‑vinda! 🚀
