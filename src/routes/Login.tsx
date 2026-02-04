@@ -1,16 +1,13 @@
+import LogoComponent from '@/components/atoms/LogoComponent';
 import InputMolecule from '@/components/molecules/InputMolecule';
 
 const Login = () => {
     return <div className='w-screen h-screen flex justify-center items-center'>
-        <main className="w-215 h-145 bg-light flex">
-            <section className="bg-dark w-[52%] h-full flex justify-center items-center">
-                <h1 className="w-full text-center text-5xl font-semibold text-light">
-                    ALL
-                    <span className="font-bold text-7xl allbuyGradientText">BUY</span>
-                    <span className="text-sm">&copy;</span>
-                </h1>
+        <main className="w-215 h-145 bg-light flex flex-col items-center md:items-start md:flex-row">
+            <section className="bg-dark md:w-[52%] w-full h-full flex justify-center items-center">
+                <LogoComponent />
             </section>
-            <section className="w-[48%] h-full flex flex-col items-center gap-10 py-25 text-dark text-2xl">
+            <section className="md:w-[48%] h-full flex flex-col items-center gap-10 py-25 text-dark text-2xl">
                 <h2 className="font-ubuntu font-extrabold">LOGIN</h2>
                 <div className="w-full px-10">
                     <form className="w-full flex flex-col gap-5">

@@ -34,12 +34,23 @@
 }
 
 @theme {
+  --animate-sheetslide: sheetslide .5s ease-out;
+
   --font-ubuntu: var(--ubuntu);
 
   --color-light: var(--custom-light);
   --color-dark: var(--custom-dark);
   --color-allbuy-blue-1: var(--allbuy-blue-1);
   --color-allbuy-blue-2: var(--allbuy-blue-2);
+}
+
+@keyframes sheetslide {
+  from {
+    transform: translateX(-100%)
+  }
+  to {
+    transform: 0;
+  }
 }
 
 .allbuyGradientText {
