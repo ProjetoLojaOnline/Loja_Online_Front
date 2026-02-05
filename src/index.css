@@ -60,6 +60,16 @@
   -webkit-text-fill-color: transparent;
 }
 
+.mobileDisplay {
+  display: none;
+}
+
+@media (width >= 48rem) {
+  .mobileDisplay {
+    display: block;
+  }
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: var(--custom-dark);
