@@ -1,0 +1,50 @@
+import SearchComponent from '@/components/molecules/SearchComponent'
+import SideModal from '@/components/molecules/SideModal'
+import { FaBars } from 'react-icons/fa6'
+import { PiGearLight, PiPackageLight, PiShoppingCartLight, PiUserCircleFill } from 'react-icons/pi'
+
+const Header = () => {
+    return <header className="w-screen h-18 absolute top-0 flex items-center justify-between bg-light text-black px-10 shadow-xl">
+
+        <div className="flex items-center gap-10">
+
+            <SideModal modalContent={
+                (
+                    <main>
+
+                    </main>
+                )
+            }>
+                <FaBars size={35} className="" />
+            </SideModal>
+
+            <div className={`w-full text-center text-2xl font-semibold text-dark`}>
+                ALL
+                <span className="font-bold text-4xl allbuyGradientText">BUY</span>
+                <span className="text-sm">&copy;</span>
+            </div>
+        </div>
+
+        <div className="flex justify-start items-center gap-10">
+            <SearchComponent />
+        </div>
+
+        <div className="flex justify-start items-center gap-5">
+            <button className="duration-100 cursor-pointer hover:text-gray-400 active:text-allbuy-blue-1">
+                <PiPackageLight size={35} />
+            </button>
+            <button className="duration-100 cursor-pointer hover:text-gray-400 active:text-allbuy-blue-1">
+                <PiShoppingCartLight size={35} />
+            </button>
+            <button className="duration-100 cursor-pointer hover:text-gray-400 active:text-allbuy-blue-1">
+                <PiGearLight size={35} />
+            </button>
+            <button className="duration-100 cursor-pointer hover:text-gray-400 active:text-allbuy-blue-1">
+                <PiUserCircleFill size={35} />
+            </button>
+        </div>
+
+    </header>
+}
+
+export default Header
