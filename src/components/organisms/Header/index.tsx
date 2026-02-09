@@ -4,14 +4,16 @@ import { FaBars } from 'react-icons/fa6'
 import { PiGearLight, PiPackageLight, PiShoppingCartLight, PiUserCircleFill } from 'react-icons/pi'
 
 const Header = () => {
-    return <header className="w-screen h-18 absolute top-0 flex items-center bg-light text-black px-10 shadow-xl">
+    return <header className="w-screen h-18 absolute top-0 flex items-center bg-light text-black px-5 md:px-10 shadow-xl">
 
         <div className="flex items-center gap-10">
 
             <SideModal modalContent={
                 (
-                    <main>
-
+                    <main className='w-full px-5 mt-5'>
+                        <div className="flex justify-start items-center gap-10 md:invisible ">
+                            <SearchComponent />
+                        </div>
                     </main>
                 )
             }>
@@ -33,7 +35,7 @@ const Header = () => {
             <button className="duration-100 cursor-pointer hover:text-gray-400 active:text-allbuy-blue-1 mobileDisplay md:block">
                 <PiPackageLight size={35} />
             </button>
-            <button className="duration-100 cursor-pointer hover:text-gray-400 active:text-allbuy-blue-1 mobileDisplay md:block">
+            <button className="duration-100 cursor-pointer hover:text-gray-400 active:text-allbuy-blue-1">
                 <PiShoppingCartLight size={35} />
             </button>
             <button className="duration-100 cursor-pointer hover:text-gray-400 active:text-allbuy-blue-1 mobileDisplay md:block">

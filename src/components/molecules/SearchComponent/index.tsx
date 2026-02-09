@@ -1,7 +1,7 @@
 import { LiaSearchSolid } from 'react-icons/lia'
 
 const SearchComponent = () => {
-    return <form className="border flex items-center px-5 py-1 rounded-4xl">
+    return <form className="border flex items-center px-5 py-1 rounded-4xl w-full">
         <button className="duration-100 cursor-pointer hover:text-gray-400 active:text-allbuy-blue-1">
             <LiaSearchSolid size={30} />
         </button>
