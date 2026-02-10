@@ -1,7 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
  
-@custom-variant dark (&:is(.dark *));
+/* @custom-variant dark (&:is(.dark *)); */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 * {
   box-sizing: border-box;
@@ -9,7 +10,7 @@
 }
 
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: var(--ubuntu), Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -34,6 +35,8 @@
 }
 
 @theme {
+  --animate-sheetslide: sheetslide .5s ease-out;
+
   --font-ubuntu: var(--ubuntu);
 
   --color-light: var(--custom-light);
@@ -42,10 +45,29 @@
   --color-allbuy-blue-2: var(--allbuy-blue-2);
 }
 
+@keyframes sheetslide {
+  from {
+    transform: translateX(-100%)
+  }
+  to {
+    transform: 0;
+  }
+}
+
 .allbuyGradientText {
   background-image: var(--allbuy-gradient);
   background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+.mobileDisplay {
+  display: none;
+}
+
+@media (width >= 48rem) {
+  .mobileDisplay {
+    display: block;
+  }
 }
 
 @media (prefers-color-scheme: light) {
