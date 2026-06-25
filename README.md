@@ -94,20 +94,29 @@ A aplicação estará disponível em `http://localhost:5173`.
 ```
 src/
 ├── components/
-│   ├── common/          # Componentes de marca (Logo, Spinner)
+│   ├── common/          # Logo (compact/full), Spinner, ProtectedRoute
 │   └── ui/              # Design system: Button, Input, Label, Checkbox
 ├── context/
-│   └── AuthContext.tsx  # Estado global de autenticação (JWT)
+│   └── AuthContext.tsx  # Estado global: JWT, role, signIn (retorna role), signOut
 ├── hooks/
-│   └── useLoginForm.ts  # Lógica do formulário de login
+│   ├── useLoginForm.ts  # Login: campos, toggle senha, submit + navigate por role
+│   └── useRegisterForm.ts # Cadastro: campos, validação CPF/tel/senha, submit
 ├── lib/
-│   └── utils.ts         # Utilitário cn() para classes CSS
+│   ├── roleNavigation.ts # roleToPath() — mapeia UserRole → path de dashboard
+│   └── utils.ts          # cn() para classes Tailwind
 ├── routes/
-│   └── Login.tsx        # Página de login
+│   ├── Login.tsx         # Tela de login (split layout, banner de cadastro)
+│   ├── Register.tsx      # Tela de cadastro (split layout, fieldsets)
+│   ├── UserDashboard.tsx # Dashboard do cliente (ROLE_USER)
+│   ├── SellerDashboard.tsx # Painel do vendedor (ROLE_VENDEDOR + ROLE_ADMIN)
+│   └── AdminDashboard.tsx  # Painel administrativo (ROLE_ADMIN)
 ├── styles/
 │   └── globals.css      # Tokens de design e configuração do Tailwind
+├── types/
+│   └── auth.ts          # UserRole, JwtPayload
 └── test/
-    ├── functional/      # Testes funcionais de páginas
+    ├── functional/      # Testes funcionais de páginas (Login, Register)
+    ├── helpers/         # createTestJwt() para mocks de JWT válidos
     ├── unit/            # Testes unitários de componentes, hooks e contexto
     └── setup.ts         # Configuração global dos testes
 ```
@@ -182,8 +191,21 @@ O projeto usa hooks locais (`.githooks/`) instalados via `npm run setup-hooks`:
 
 Este frontend se comunica com a API [`Loja_Online`](../Loja_Online) (Spring Boot).
 
-Endpoint utilizado:
+Endpoints utilizados:
 
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| `POST` | `/login/authenticate` | Autenticação — retorna JWT |
+| Método | Rota | Descrição | Autenticação |
+|--------|------|-----------|-------------|
+| `POST` | `/login/authenticate` | Autenticação — retorna JWT | Pública |
+| `POST` | `/api/usuarios` | Cadastro de novo usuário | Pública |
+| `GET` | `/api/usuarios` | Lista todos os usuários | `ROLE_ADMIN` |
+| `GET` | `/api/usuarios/{id}` | Busca usuário por ID (próprio) | Autenticado |
+| `PUT` | `/api/usuarios/{id}` | Atualiza perfil (próprio) | Autenticado |
+| `DELETE` | `/api/usuarios/{id}` | Remove conta (própria) | Autenticado |
+
+### Roles e rotas do frontend
+
+| Role | Rota | Acesso |
+|------|------|--------|
+| `ROLE_USER` | `/dashboard` | Clientes cadastrados |
+| `ROLE_VENDEDOR` | `/vendedor` | Vendedores + Admins |
+| `ROLE_ADMIN` | `/admin` | Somente administradores |
