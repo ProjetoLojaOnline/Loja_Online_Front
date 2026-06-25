@@ -1,19 +1,16 @@
-import { Link, Navigate } from "react-router";
+import { Link } from "react-router";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 
 import { useRegisterForm } from "@/hooks/useRegisterForm";
-import { useAuth } from "@/context/AuthContext";
-import { roleToPath } from "@/lib/roleNavigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Logo } from "@/components/common/Logo";
+import { AuthBrandPanel } from "@/components/common/AuthBrandPanel";
 
 const Register = () => {
-  const { isAuthenticated, userRole } = useAuth();
-
   const {
     formData,
+    passwordMismatch,
     isPasswordVisible,
     errorMessage,
     isSubmitting,
@@ -22,25 +19,9 @@ const Register = () => {
     handleSubmit,
   } = useRegisterForm();
 
-  if (isAuthenticated) {
-    return <Navigate to={roleToPath(userRole)} replace />;
-  }
-
   return (
     <div className="flex h-screen w-screen overflow-hidden">
-      {/* Brand panel — visible from md up */}
-      <aside className="relative hidden md:flex md:w-[40%] flex-col items-center justify-center gap-4 bg-[var(--color-brand-dark)] overflow-hidden">
-        <div className="pointer-events-none absolute -top-24 -right-24 h-80 w-80 rounded-full bg-[var(--color-brand-blue-primary)]/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-[var(--color-brand-blue-secondary)]/15 blur-3xl" />
-
-        <Logo />
-        <p className="text-[var(--color-brand-light)]/50 text-xs tracking-[0.3em] uppercase">
-          Sua loja, sua experiência
-        </p>
-        <p className="absolute bottom-6 text-[var(--color-brand-light)]/25 text-xs">
-          © 2025 AllBuy. Todos os direitos reservados.
-        </p>
-      </aside>
+      <AuthBrandPanel widthClass="md:w-[40%]" />
 
       {/* Form panel */}
       <main className="flex flex-1 flex-col items-center justify-center overflow-y-auto bg-white px-8 py-12">
@@ -230,8 +211,14 @@ const Register = () => {
                   autoComplete="new-password"
                   minLength={6}
                   required
+                  aria-invalid={passwordMismatch}
                   value={formData.confirmPassword}
                   onChange={handleChange}
+                  className={
+                    passwordMismatch
+                      ? "border-red-400 focus:ring-red-400"
+                      : undefined
+                  }
                 />
               </div>
             </fieldset>
@@ -244,7 +231,7 @@ const Register = () => {
 
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || passwordMismatch}
               className="mt-1 w-full"
             >
               {isSubmitting ? "Criando conta..." : "Criar conta"}

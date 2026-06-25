@@ -6,6 +6,8 @@ import {
 } from "react";
 import { useNavigate } from "react-router";
 
+import { parseBackendError, UNEXPECTED_ERROR_MESSAGE } from "@/lib/api";
+
 interface RegisterFormData {
   nome: string;
   email: string;
@@ -20,6 +22,7 @@ interface RegisterFormData {
 
 interface UseRegisterFormReturn {
   formData: RegisterFormData;
+  passwordMismatch: boolean;
   isPasswordVisible: boolean;
   errorMessage: string | null;
   isSubmitting: boolean;
@@ -42,17 +45,6 @@ const INITIAL_FORM_DATA: RegisterFormData = {
   confirmPassword: "",
 };
 
-const UNEXPECTED_ERROR_MESSAGE = "Unexpected error. Please try again.";
-
-async function parseBackendError(response: Response): Promise<string> {
-  try {
-    const body = (await response.json()) as { message?: string };
-    return body.message ?? UNEXPECTED_ERROR_MESSAGE;
-  } catch {
-    return UNEXPECTED_ERROR_MESSAGE;
-  }
-}
-
 export function useRegisterForm(): UseRegisterFormReturn {
   const navigate = useNavigate();
 
@@ -60,6 +52,10 @@ export function useRegisterForm(): UseRegisterFormReturn {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const passwordMismatch =
+    formData.confirmPassword.length > 0 &&
+    formData.password !== formData.confirmPassword;
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -78,22 +74,10 @@ export function useRegisterForm(): UseRegisterFormReturn {
     async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
 
-      if (formData.password !== formData.confirmPassword) {
-        setErrorMessage("As senhas não coincidem.");
-        return;
-      }
+      if (formData.password !== formData.confirmPassword) return;
 
       const cpfDigits = formData.cpf.replace(/\D/g, "");
-      if (cpfDigits.length !== 11) {
-        setErrorMessage("CPF deve ter exatamente 11 dígitos.");
-        return;
-      }
-
       const phoneDigits = formData.telefone.replace(/\D/g, "");
-      if (phoneDigits.length < 10 || phoneDigits.length > 11) {
-        setErrorMessage("Telefone deve ter 10 ou 11 dígitos.");
-        return;
-      }
 
       setErrorMessage(null);
       setIsSubmitting(true);
@@ -140,6 +124,7 @@ export function useRegisterForm(): UseRegisterFormReturn {
 
   return {
     formData,
+    passwordMismatch,
     isPasswordVisible,
     errorMessage,
     isSubmitting,

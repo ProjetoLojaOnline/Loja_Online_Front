@@ -5,6 +5,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import "@/styles/globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ProtectedRoute } from "@/components/common/ProtectedRoute";
+import { PublicOnlyRoute } from "@/components/common/PublicOnlyRoute";
 import { useAuth } from "@/context/AuthContext";
 import { roleToPath } from "@/lib/roleNavigation";
 
@@ -25,8 +26,23 @@ createRoot(document.getElementById("root")!).render(
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/cadastro" element={<Register />} />
+          <Route
+            path="/login"
+            element={
+              <PublicOnlyRoute>
+                <Login />
+              </PublicOnlyRoute>
+            }
+          />
+
+          <Route
+            path="/cadastro"
+            element={
+              <PublicOnlyRoute>
+                <Register />
+              </PublicOnlyRoute>
+            }
+          />
 
           <Route
             path="/dashboard"
