@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080}
+    container_name: loja-online-front
+    ports:
+      - "80:80"
+    networks:
+      - loja-network
+
+networks:
+  loja-network:
+    name: loja-network
+    external: false
