@@ -2,6 +2,7 @@ import { useState, useCallback, type ChangeEvent, type FormEvent } from "react";
 import { useNavigate } from "react-router";
 
 import { useAuth } from "@/context/AuthContext";
+import { roleToPath } from "@/lib/roleNavigation";
 
 interface UseLoginFormReturn {
   email: string;
@@ -47,8 +48,8 @@ export function useLoginForm(): UseLoginFormReturn {
       setErrorMessage(null);
       setIsSubmitting(true);
       try {
-        await signIn(email, password);
-        navigate("/");
+        const role = await signIn(email, password);
+        navigate(roleToPath(role));
       } catch (error) {
         setErrorMessage(
           error instanceof Error ? error.message : "Unexpected error."

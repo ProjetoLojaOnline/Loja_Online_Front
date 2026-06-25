@@ -1,13 +1,19 @@
-import { Link } from "react-router";
-import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { Link, Navigate, useSearchParams } from "react-router";
+import { EyeIcon, EyeOffIcon, CheckCircleIcon } from "lucide-react";
 
 import { useLoginForm } from "@/hooks/useLoginForm";
+import { useAuth } from "@/context/AuthContext";
+import { roleToPath } from "@/lib/roleNavigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/common/Logo";
 
 const Login = () => {
+  const { isAuthenticated, userRole } = useAuth();
+  const [searchParams] = useSearchParams();
+  const justRegistered = searchParams.get("registered") === "true";
+
   const {
     email,
     password,
@@ -20,11 +26,14 @@ const Login = () => {
     handleSubmit,
   } = useLoginForm();
 
+  if (isAuthenticated) {
+    return <Navigate to={roleToPath(userRole)} replace />;
+  }
+
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       {/* Brand panel — visible from md up */}
       <aside className="relative hidden md:flex md:w-[45%] flex-col items-center justify-center gap-4 bg-[var(--color-brand-dark)] overflow-hidden">
-        {/* Decorative blur orbs */}
         <div className="pointer-events-none absolute -top-24 -right-24 h-80 w-80 rounded-full bg-[var(--color-brand-blue-primary)]/20 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-[var(--color-brand-blue-secondary)]/15 blur-3xl" />
 
@@ -32,7 +41,6 @@ const Login = () => {
         <p className="text-[var(--color-brand-light)]/50 text-xs tracking-[0.3em] uppercase">
           Sua loja, sua experiência
         </p>
-
         <p className="absolute bottom-6 text-[var(--color-brand-light)]/25 text-xs">
           © 2025 AllBuy. Todos os direitos reservados.
         </p>
@@ -57,6 +65,16 @@ const Login = () => {
               Entre com sua conta para continuar
             </p>
           </div>
+
+          {justRegistered && (
+            <div
+              role="status"
+              className="mb-5 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700"
+            >
+              <CheckCircleIcon className="size-4 shrink-0" />
+              Conta criada com sucesso! Faça login para continuar.
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div className="flex flex-col gap-1.5">
