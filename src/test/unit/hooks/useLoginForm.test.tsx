@@ -4,6 +4,11 @@ import { MemoryRouter } from "react-router";
 
 import { AuthProvider, TOKEN_STORAGE_KEY } from "@/context/AuthContext";
 import { useLoginForm } from "@/hooks/useLoginForm";
+import { createTestJwt } from "@/test/helpers/jwt";
+
+const userJwt = createTestJwt("ROLE_USER");
+const adminJwt = createTestJwt("ROLE_ADMIN");
+const vendedorJwt = createTestJwt("ROLE_VENDEDOR");
 
 const wrapper = ({ children }: { children: ReactNode }) => (
   <MemoryRouter initialEntries={["/login"]}>
@@ -112,7 +117,7 @@ describe("useLoginForm — form submission", () => {
 
   it("stores token in localStorage after successful sign in", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response("jwt-token-value", { status: 200 })
+      new Response(userJwt, { status: 200 })
     );
     const { result } = renderHook(() => useLoginForm(), { wrapper });
     act(() => {
@@ -122,7 +127,7 @@ describe("useLoginForm — form submission", () => {
     await act(async () => {
       await result.current.handleSubmit(makeSubmitEvent());
     });
-    expect(localStorage.getItem(TOKEN_STORAGE_KEY)).toBe("jwt-token-value");
+    expect(localStorage.getItem(TOKEN_STORAGE_KEY)).toBe(userJwt);
   });
 
   it("clears error message on successful sign in", async () => {
@@ -132,7 +137,7 @@ describe("useLoginForm — form submission", () => {
           status: 401,
         })
       )
-      .mockResolvedValueOnce(new Response("jwt-token", { status: 200 }));
+      .mockResolvedValueOnce(new Response(userJwt, { status: 200 }));
 
     const { result } = renderHook(() => useLoginForm(), { wrapper });
     act(() => {
@@ -182,5 +187,51 @@ describe("useLoginForm — form submission", () => {
       await result.current.handleSubmit(makeSubmitEvent());
     });
     expect(result.current.isSubmitting).toBe(false);
+  });
+
+  it("navigates to /dashboard for ROLE_USER after sign in", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(userJwt, { status: 200 })
+    );
+    const { result } = renderHook(() => useLoginForm(), { wrapper });
+    act(() => {
+      result.current.handleEmailChange(makeEmailEvent("user@email.com"));
+      result.current.handlePasswordChange(makePasswordEvent("password123"));
+    });
+    await act(async () => {
+      await result.current.handleSubmit(makeSubmitEvent());
+    });
+    expect(result.current.isSubmitting).toBe(false);
+    expect(result.current.errorMessage).toBeNull();
+  });
+
+  it("navigates to /admin for ROLE_ADMIN after sign in", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(adminJwt, { status: 200 })
+    );
+    const { result } = renderHook(() => useLoginForm(), { wrapper });
+    act(() => {
+      result.current.handleEmailChange(makeEmailEvent("admin@email.com"));
+      result.current.handlePasswordChange(makePasswordEvent("adminpass"));
+    });
+    await act(async () => {
+      await result.current.handleSubmit(makeSubmitEvent());
+    });
+    expect(localStorage.getItem(TOKEN_STORAGE_KEY)).toBe(adminJwt);
+  });
+
+  it("navigates to /vendedor for ROLE_VENDEDOR after sign in", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(vendedorJwt, { status: 200 })
+    );
+    const { result } = renderHook(() => useLoginForm(), { wrapper });
+    act(() => {
+      result.current.handleEmailChange(makeEmailEvent("seller@email.com"));
+      result.current.handlePasswordChange(makePasswordEvent("sellerpass"));
+    });
+    await act(async () => {
+      await result.current.handleSubmit(makeSubmitEvent());
+    });
+    expect(localStorage.getItem(TOKEN_STORAGE_KEY)).toBe(vendedorJwt);
   });
 });

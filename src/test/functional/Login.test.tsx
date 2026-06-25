@@ -4,6 +4,9 @@ import { MemoryRouter, Routes, Route } from "react-router";
 
 import Login from "@/routes/Login";
 import { AuthProvider, TOKEN_STORAGE_KEY } from "@/context/AuthContext";
+import { createTestJwt } from "@/test/helpers/jwt";
+
+const userJwt = createTestJwt("ROLE_USER");
 
 const renderLoginPage = () =>
   render(
@@ -11,7 +14,9 @@ const renderLoginPage = () =>
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/" element={<div>Home Page</div>} />
+          <Route path="/dashboard" element={<div>User Dashboard</div>} />
+          <Route path="/admin" element={<div>Admin Dashboard</div>} />
+          <Route path="/vendedor" element={<div>Seller Dashboard</div>} />
           <Route path="/cadastro" element={<div>Register Page</div>} />
         </Routes>
       </AuthProvider>
@@ -61,6 +66,30 @@ describe("Login page — rendering", () => {
   });
 });
 
+describe("Login page — success banner", () => {
+  it("shows success message when ?registered=true is in URL", () => {
+    render(
+      <MemoryRouter initialEntries={["/login?registered=true"]}>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+          </Routes>
+        </AuthProvider>
+      </MemoryRouter>
+    );
+    expect(
+      screen.getByText(/conta criada com sucesso/i)
+    ).toBeInTheDocument();
+  });
+
+  it("does not show success banner when ?registered param is absent", () => {
+    renderLoginPage();
+    expect(
+      screen.queryByText(/conta criada com sucesso/i)
+    ).not.toBeInTheDocument();
+  });
+});
+
 describe("Login page — password visibility", () => {
   it("hides password by default", () => {
     renderLoginPage();
@@ -93,7 +122,7 @@ describe("Login page — form submission", () => {
 
   it("calls signIn with the typed email and password", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response("jwt-token", { status: 200 })
+      new Response(userJwt, { status: 200 })
     );
     renderLoginPage();
 
@@ -107,9 +136,9 @@ describe("Login page — form submission", () => {
     expect(requestBody).toEqual({ email: "user@email.com", senha: "password123" });
   });
 
-  it("redirects to home page after successful sign in", async () => {
+  it("redirects to /dashboard for ROLE_USER after successful sign in", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response("jwt-token", { status: 200 })
+      new Response(userJwt, { status: 200 })
     );
     renderLoginPage();
 
@@ -118,13 +147,43 @@ describe("Login page — form submission", () => {
     await userEvent.click(screen.getByRole("button", { name: /entrar/i }));
 
     await waitFor(() => {
-      expect(screen.getByText("Home Page")).toBeInTheDocument();
+      expect(screen.getByText("User Dashboard")).toBeInTheDocument();
+    });
+  });
+
+  it("redirects to /admin for ROLE_ADMIN after successful sign in", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(createTestJwt("ROLE_ADMIN"), { status: 200 })
+    );
+    renderLoginPage();
+
+    await userEvent.type(screen.getByLabelText("Email"), "admin@email.com");
+    await userEvent.type(screen.getByLabelText("Senha"), "adminpass");
+    await userEvent.click(screen.getByRole("button", { name: /entrar/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Admin Dashboard")).toBeInTheDocument();
+    });
+  });
+
+  it("redirects to /vendedor for ROLE_VENDEDOR after successful sign in", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(createTestJwt("ROLE_VENDEDOR"), { status: 200 })
+    );
+    renderLoginPage();
+
+    await userEvent.type(screen.getByLabelText("Email"), "seller@email.com");
+    await userEvent.type(screen.getByLabelText("Senha"), "sellerpass");
+    await userEvent.click(screen.getByRole("button", { name: /entrar/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Seller Dashboard")).toBeInTheDocument();
     });
   });
 
   it("stores JWT token in localStorage after successful sign in", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response("jwt-token-value", { status: 200 })
+      new Response(userJwt, { status: 200 })
     );
     renderLoginPage();
 
@@ -133,7 +192,7 @@ describe("Login page — form submission", () => {
     await userEvent.click(screen.getByRole("button", { name: /entrar/i }));
 
     await waitFor(() => {
-      expect(localStorage.getItem(TOKEN_STORAGE_KEY)).toBe("jwt-token-value");
+      expect(localStorage.getItem(TOKEN_STORAGE_KEY)).toBe(userJwt);
     });
   });
 
@@ -174,7 +233,7 @@ describe("Login page — form submission", () => {
     vi.mocked(fetch).mockImplementationOnce(
       () =>
         new Promise((resolve) =>
-          setTimeout(() => resolve(new Response("jwt-token", { status: 200 })), 300)
+          setTimeout(() => resolve(new Response(userJwt, { status: 200 })), 300)
         )
     );
     renderLoginPage();
@@ -208,7 +267,7 @@ describe("Login page — form submission", () => {
       .mockResolvedValueOnce(
         new Response(JSON.stringify({ message: "First error" }), { status: 401 })
       )
-      .mockResolvedValueOnce(new Response("jwt-token", { status: 200 }));
+      .mockResolvedValueOnce(new Response(userJwt, { status: 200 }));
 
     renderLoginPage();
     await userEvent.type(screen.getByLabelText("Email"), "user@email.com");
