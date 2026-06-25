@@ -113,4 +113,19 @@ describe("ProtectedRoute — role-based access", () => {
     expect(screen.getByText("Dashboard")).toBeInTheDocument();
     expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
   });
+
+  it("redirects to /login when token has no valid role (defense in depth)", () => {
+    // A JWT without a recognized role is rejected by AuthContext — isAuthenticated stays false
+    const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+    const payload = btoa(
+      JSON.stringify({ sub: "user@email.com", iat: 1000000, exp: 9999999999 })
+    );
+    const noRoleJwt = `${header}.${payload}.fakesig`;
+    renderWithRoute("/protected", {
+      token: noRoleJwt,
+      allowedRoles: ["ROLE_ADMIN"],
+    });
+    expect(screen.getByText("Login Page")).toBeInTheDocument();
+    expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
+  });
 });

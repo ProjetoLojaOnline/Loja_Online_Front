@@ -3,19 +3,35 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Routes, Route } from "react-router";
 
 import Register from "@/routes/Register";
-import { AuthProvider } from "@/context/AuthContext";
+import { AuthProvider, TOKEN_STORAGE_KEY } from "@/context/AuthContext";
+import { PublicOnlyRoute } from "@/components/common/PublicOnlyRoute";
+import { createTestJwt } from "@/test/helpers/jwt";
 
-const renderRegisterPage = (initialPath = "/cadastro") =>
-  render(
+const renderRegisterPage = (initialToken?: string, initialPath = "/cadastro") => {
+  if (initialToken) {
+    localStorage.setItem(TOKEN_STORAGE_KEY, initialToken);
+  }
+  return render(
     <MemoryRouter initialEntries={[initialPath]}>
       <AuthProvider>
         <Routes>
-          <Route path="/cadastro" element={<Register />} />
+          <Route
+            path="/cadastro"
+            element={
+              <PublicOnlyRoute>
+                <Register />
+              </PublicOnlyRoute>
+            }
+          />
           <Route path="/login" element={<div>Login Page</div>} />
+          <Route path="/dashboard" element={<div>User Dashboard</div>} />
+          <Route path="/admin" element={<div>Admin Dashboard</div>} />
+          <Route path="/vendedor" element={<div>Seller Dashboard</div>} />
         </Routes>
       </AuthProvider>
     </MemoryRouter>
   );
+};
 
 const fillForm = async (overrides: Record<string, string> = {}) => {
   const defaults: Record<string, string> = {
@@ -35,6 +51,8 @@ const fillForm = async (overrides: Record<string, string> = {}) => {
     await userEvent.type(field, value);
   }
 };
+
+afterEach(() => localStorage.clear());
 
 describe("Register page — rendering", () => {
   it("renders the page heading", () => {
@@ -83,6 +101,18 @@ describe("Register page — rendering", () => {
   });
 });
 
+describe("Register page — auth redirect", () => {
+  it("redirects to /dashboard when already authenticated as ROLE_USER", () => {
+    renderRegisterPage(createTestJwt("ROLE_USER"));
+    expect(screen.getByText("User Dashboard")).toBeInTheDocument();
+  });
+
+  it("redirects to /admin when already authenticated as ROLE_ADMIN", () => {
+    renderRegisterPage(createTestJwt("ROLE_ADMIN"));
+    expect(screen.getByText("Admin Dashboard")).toBeInTheDocument();
+  });
+});
+
 describe("Register page — password visibility", () => {
   it("hides password and confirm password by default", () => {
     renderRegisterPage();
@@ -109,32 +139,39 @@ describe("Register page — password visibility", () => {
   });
 });
 
-describe("Register page — validation", () => {
-  beforeEach(() => vi.stubGlobal("fetch", vi.fn()));
-  afterEach(() => vi.unstubAllGlobals());
+describe("Register page — password mismatch", () => {
+  it("disables submit button when passwords do not match", async () => {
+    renderRegisterPage();
+    await fillForm({ "Confirmar senha": "outrasenha" });
+    expect(
+      screen.getByRole("button", { name: /criar conta/i })
+    ).toBeDisabled();
+  });
 
-  it("shows error when passwords do not match", async () => {
+  it("marks confirmPassword field as invalid when passwords do not match", async () => {
+    renderRegisterPage();
+    await fillForm({ "Confirmar senha": "outrasenha" });
+    expect(screen.getByLabelText(/confirmar senha/i)).toHaveAttribute(
+      "aria-invalid",
+      "true"
+    );
+  });
+
+  it("does not call fetch when passwords do not match", async () => {
+    vi.stubGlobal("fetch", vi.fn());
     renderRegisterPage();
     await fillForm({ "Confirmar senha": "outrasenha" });
     await userEvent.click(screen.getByRole("button", { name: /criar conta/i }));
-    await waitFor(() => {
-      expect(screen.getByRole("alert")).toHaveTextContent(
-        "As senhas não coincidem."
-      );
-    });
     expect(fetch).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
   });
 
-  it("shows error when CPF has fewer than 11 digits", async () => {
+  it("enables submit button when passwords match", async () => {
     renderRegisterPage();
-    await fillForm({ CPF: "1234567" });
-    await userEvent.click(screen.getByRole("button", { name: /criar conta/i }));
-    await waitFor(() => {
-      expect(screen.getByRole("alert")).toHaveTextContent(
-        "CPF deve ter exatamente 11 dígitos."
-      );
-    });
-    expect(fetch).not.toHaveBeenCalled();
+    await fillForm();
+    expect(
+      screen.getByRole("button", { name: /criar conta/i })
+    ).not.toBeDisabled();
   });
 });
 

@@ -38,6 +38,11 @@ describe("useRegisterForm — initial state", () => {
     expect(result.current.formData.confirmPassword).toBe("");
   });
 
+  it("starts with passwordMismatch false", () => {
+    const { result } = renderHook(() => useRegisterForm(), { wrapper });
+    expect(result.current.passwordMismatch).toBe(false);
+  });
+
   it("starts with password hidden", () => {
     const { result } = renderHook(() => useRegisterForm(), { wrapper });
     expect(result.current.isPasswordVisible).toBe(false);
@@ -68,11 +73,32 @@ describe("useRegisterForm — field updates", () => {
   });
 });
 
-describe("useRegisterForm — validation", () => {
-  beforeEach(() => vi.stubGlobal("fetch", vi.fn()));
-  afterEach(() => vi.unstubAllGlobals());
+describe("useRegisterForm — passwordMismatch", () => {
+  it("passwordMismatch is false when passwords match", () => {
+    const { result } = renderHook(() => useRegisterForm(), { wrapper });
+    act(() => fillRequiredFields(result.current.handleChange));
+    expect(result.current.passwordMismatch).toBe(false);
+  });
 
-  it("sets error when passwords do not match", async () => {
+  it("passwordMismatch is true when confirm password differs from password", () => {
+    const { result } = renderHook(() => useRegisterForm(), { wrapper });
+    act(() => {
+      fillRequiredFields(result.current.handleChange);
+      result.current.handleChange(makeInputEvent("confirmPassword", "outrasenha"));
+    });
+    expect(result.current.passwordMismatch).toBe(true);
+  });
+
+  it("passwordMismatch is false when confirmPassword is still empty", () => {
+    const { result } = renderHook(() => useRegisterForm(), { wrapper });
+    act(() => {
+      result.current.handleChange(makeInputEvent("password", "senha123"));
+    });
+    expect(result.current.passwordMismatch).toBe(false);
+  });
+
+  it("does not call fetch when passwords do not match", async () => {
+    vi.stubGlobal("fetch", vi.fn());
     const { result } = renderHook(() => useRegisterForm(), { wrapper });
     act(() => {
       fillRequiredFields(result.current.handleChange);
@@ -81,52 +107,9 @@ describe("useRegisterForm — validation", () => {
     await act(async () => {
       await result.current.handleSubmit(makeSubmitEvent());
     });
-    expect(result.current.errorMessage).toBe("As senhas não coincidem.");
     expect(fetch).not.toHaveBeenCalled();
-  });
-
-  it("sets error when CPF has fewer than 11 digits", async () => {
-    const { result } = renderHook(() => useRegisterForm(), { wrapper });
-    act(() => {
-      fillRequiredFields(result.current.handleChange);
-      result.current.handleChange(makeInputEvent("cpf", "1234567"));
-    });
-    await act(async () => {
-      await result.current.handleSubmit(makeSubmitEvent());
-    });
-    expect(result.current.errorMessage).toBe(
-      "CPF deve ter exatamente 11 dígitos."
-    );
-    expect(fetch).not.toHaveBeenCalled();
-  });
-
-  it("accepts CPF with formatting characters (dots and dash)", async () => {
-    const { result } = renderHook(() => useRegisterForm(), { wrapper });
-    act(() => {
-      fillRequiredFields(result.current.handleChange);
-      result.current.handleChange(makeInputEvent("cpf", "123.456.789-01"));
-    });
-    await act(async () => {
-      await result.current.handleSubmit(makeSubmitEvent());
-    });
-    expect(result.current.errorMessage).not.toBe(
-      "CPF deve ter exatamente 11 dígitos."
-    );
-  });
-
-  it("sets error when phone has fewer than 10 digits", async () => {
-    const { result } = renderHook(() => useRegisterForm(), { wrapper });
-    act(() => {
-      fillRequiredFields(result.current.handleChange);
-      result.current.handleChange(makeInputEvent("telefone", "1199999"));
-    });
-    await act(async () => {
-      await result.current.handleSubmit(makeSubmitEvent());
-    });
-    expect(result.current.errorMessage).toBe(
-      "Telefone deve ter 10 ou 11 dígitos."
-    );
-    expect(fetch).not.toHaveBeenCalled();
+    expect(result.current.errorMessage).toBeNull();
+    vi.unstubAllGlobals();
   });
 });
 

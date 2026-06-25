@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { MemoryRouter } from "react-router";
 
 import { AuthProvider, TOKEN_STORAGE_KEY, useAuth } from "@/context/AuthContext";
@@ -18,17 +18,21 @@ const SignInButton = ({
   password?: string;
 }) => {
   const { signIn, isAuthenticated, userRole } = useAuth();
+  const [signInError, setSignInError] = useState<string | null>(null);
   return (
     <>
       <button
         onClick={() => {
-          signIn(email, password).catch(() => undefined);
+          signIn(email, password).catch((err: Error) => {
+            setSignInError(err.message);
+          });
         }}
       >
         Sign In
       </button>
       <span data-testid="auth">{isAuthenticated ? "yes" : "no"}</span>
       <span data-testid="role">{userRole ?? "none"}</span>
+      {signInError && <span data-testid="error">{signInError}</span>}
     </>
   );
 };
@@ -41,6 +45,11 @@ const SignOutButton = () => {
       <span data-testid="auth">{isAuthenticated ? "yes" : "no"}</span>
     </>
   );
+};
+
+const TokenDisplay = () => {
+  const { token } = useAuth();
+  return <span data-testid="token">{token ?? "null"}</span>;
 };
 
 const renderWithAuth = (
@@ -76,6 +85,36 @@ describe("AuthContext — initial state", () => {
     renderWithAuth(<SignInButton />);
     expect(screen.getByTestId("auth")).toHaveTextContent("no");
     expect(localStorage.getItem(TOKEN_STORAGE_KEY)).toBeNull();
+  });
+
+  it("clears token without exp field on initialization", () => {
+    const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+    const payload = btoa(JSON.stringify({ sub: "user@email.com", role: "ROLE_USER", iat: 1000000 }));
+    const noExpJwt = `${header}.${payload}.fakesig`;
+    localStorage.setItem(TOKEN_STORAGE_KEY, noExpJwt);
+    renderWithAuth(<SignInButton />);
+    expect(screen.getByTestId("auth")).toHaveTextContent("no");
+    expect(localStorage.getItem(TOKEN_STORAGE_KEY)).toBeNull();
+  });
+
+  it("clears token with unknown role on initialization", () => {
+    const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+    const payload = btoa(JSON.stringify({ sub: "user@email.com", role: "ROLE_SUPERADMIN", iat: 1000000, exp: 9999999999 }));
+    const unknownRoleJwt = `${header}.${payload}.fakesig`;
+    localStorage.setItem(TOKEN_STORAGE_KEY, unknownRoleJwt);
+    renderWithAuth(<SignInButton />);
+    expect(screen.getByTestId("auth")).toHaveTextContent("no");
+    expect(localStorage.getItem(TOKEN_STORAGE_KEY)).toBeNull();
+  });
+
+  it("token field holds the stored JWT value after mount", () => {
+    renderWithAuth(<TokenDisplay />, { initialToken: userJwt });
+    expect(screen.getByTestId("token")).toHaveTextContent(userJwt);
+  });
+
+  it("token field is null when no token is stored", () => {
+    renderWithAuth(<TokenDisplay />);
+    expect(screen.getByTestId("token")).toHaveTextContent("null");
   });
 
   it("restores ROLE_USER from stored token", () => {
@@ -164,6 +203,51 @@ describe("AuthContext — signIn", () => {
       expect(screen.getByTestId("auth")).toHaveTextContent("no")
     );
     expect(localStorage.getItem(TOKEN_STORAGE_KEY)).toBeNull();
+  });
+
+  it("re-throws backend error message when sign in fails with 401", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify({ message: "Credenciais inválidas." }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      })
+    );
+    renderWithAuth(<SignInButton />);
+    await userEvent.click(screen.getByRole("button", { name: "Sign In" }));
+    await waitFor(() =>
+      expect(screen.getByTestId("error")).toHaveTextContent("Credenciais inválidas.")
+    );
+  });
+
+  it("throws when backend 200 response is not a valid JWT", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response("not-a-jwt", { status: 200 })
+    );
+    renderWithAuth(<SignInButton />);
+    await userEvent.click(screen.getByRole("button", { name: "Sign In" }));
+    await waitFor(() =>
+      expect(screen.getByTestId("auth")).toHaveTextContent("no")
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("error")).toBeInTheDocument()
+    );
+  });
+
+  it("throws when backend 200 JWT has no recognized role", async () => {
+    const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+    const payload = btoa(JSON.stringify({ sub: "user@email.com", role: "ROLE_SUPERADMIN", iat: 1000000, exp: 9999999999 }));
+    const unknownRoleJwt = `${header}.${payload}.fakesig`;
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(unknownRoleJwt, { status: 200 })
+    );
+    renderWithAuth(<SignInButton />);
+    await userEvent.click(screen.getByRole("button", { name: "Sign In" }));
+    await waitFor(() =>
+      expect(screen.getByTestId("auth")).toHaveTextContent("no")
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("error")).toBeInTheDocument()
+    );
   });
 
   it("sends email and senha in request body", async () => {

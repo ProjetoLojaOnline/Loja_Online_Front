@@ -4,16 +4,27 @@ import { MemoryRouter, Routes, Route } from "react-router";
 
 import Login from "@/routes/Login";
 import { AuthProvider, TOKEN_STORAGE_KEY } from "@/context/AuthContext";
+import { PublicOnlyRoute } from "@/components/common/PublicOnlyRoute";
 import { createTestJwt } from "@/test/helpers/jwt";
 
 const userJwt = createTestJwt("ROLE_USER");
 
-const renderLoginPage = () =>
-  render(
+const renderLoginPage = (initialToken?: string) => {
+  if (initialToken) {
+    localStorage.setItem(TOKEN_STORAGE_KEY, initialToken);
+  }
+  return render(
     <MemoryRouter initialEntries={["/login"]}>
       <AuthProvider>
         <Routes>
-          <Route path="/login" element={<Login />} />
+          <Route
+            path="/login"
+            element={
+              <PublicOnlyRoute>
+                <Login />
+              </PublicOnlyRoute>
+            }
+          />
           <Route path="/dashboard" element={<div>User Dashboard</div>} />
           <Route path="/admin" element={<div>Admin Dashboard</div>} />
           <Route path="/vendedor" element={<div>Seller Dashboard</div>} />
@@ -22,6 +33,9 @@ const renderLoginPage = () =>
       </AuthProvider>
     </MemoryRouter>
   );
+};
+
+afterEach(() => localStorage.clear());
 
 describe("Login page — rendering", () => {
   it("renders the brand logo", () => {
@@ -66,13 +80,37 @@ describe("Login page — rendering", () => {
   });
 });
 
+describe("Login page — auth redirect", () => {
+  it("redirects to /dashboard when already authenticated as ROLE_USER", () => {
+    renderLoginPage(createTestJwt("ROLE_USER"));
+    expect(screen.getByText("User Dashboard")).toBeInTheDocument();
+  });
+
+  it("redirects to /admin when already authenticated as ROLE_ADMIN", () => {
+    renderLoginPage(createTestJwt("ROLE_ADMIN"));
+    expect(screen.getByText("Admin Dashboard")).toBeInTheDocument();
+  });
+
+  it("redirects to /vendedor when already authenticated as ROLE_VENDEDOR", () => {
+    renderLoginPage(createTestJwt("ROLE_VENDEDOR"));
+    expect(screen.getByText("Seller Dashboard")).toBeInTheDocument();
+  });
+});
+
 describe("Login page — success banner", () => {
   it("shows success message when ?registered=true is in URL", () => {
     render(
       <MemoryRouter initialEntries={["/login?registered=true"]}>
         <AuthProvider>
           <Routes>
-            <Route path="/login" element={<Login />} />
+            <Route
+              path="/login"
+              element={
+                <PublicOnlyRoute>
+                  <Login />
+                </PublicOnlyRoute>
+              }
+            />
           </Routes>
         </AuthProvider>
       </MemoryRouter>
