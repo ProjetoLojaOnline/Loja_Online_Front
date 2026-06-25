@@ -11,7 +11,7 @@ interface UseLoginFormReturn {
   isSubmitting: boolean;
   handleEmailChange(event: ChangeEvent<HTMLInputElement>): void;
   handlePasswordChange(event: ChangeEvent<HTMLInputElement>): void;
-  handlePasswordVisibilityChange(checked: boolean | "indeterminate"): void;
+  togglePasswordVisibility(): void;
   handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void>;
 }
 
@@ -35,8 +35,8 @@ export function useLoginForm(): UseLoginFormReturn {
     []
   );
 
-  const handlePasswordVisibilityChange = useCallback(
-    (checked: boolean | "indeterminate") => setIsPasswordVisible(checked === true),
+  const togglePasswordVisibility = useCallback(
+    () => setIsPasswordVisible((previous) => !previous),
     []
   );
 
@@ -68,7 +68,7 @@ export function useLoginForm(): UseLoginFormReturn {
     isSubmitting,
     handleEmailChange,
     handlePasswordChange,
-    handlePasswordVisibilityChange,
+    togglePasswordVisibility,
     handleSubmit,
   };
 }

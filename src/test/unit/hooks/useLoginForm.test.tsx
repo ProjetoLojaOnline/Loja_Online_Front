@@ -60,27 +60,19 @@ describe("useLoginForm — field updates", () => {
     expect(result.current.password).toBe("secret123");
   });
 
-  it("reveals password when handlePasswordVisibilityChange is called with true", () => {
+  it("reveals password when togglePasswordVisibility is called", () => {
     const { result } = renderHook(() => useLoginForm(), { wrapper });
     act(() => {
-      result.current.handlePasswordVisibilityChange(true);
+      result.current.togglePasswordVisibility();
     });
     expect(result.current.isPasswordVisible).toBe(true);
   });
 
-  it("keeps password hidden when called with false", () => {
+  it("hides password again when togglePasswordVisibility is called twice", () => {
     const { result } = renderHook(() => useLoginForm(), { wrapper });
     act(() => {
-      result.current.handlePasswordVisibilityChange(true);
-      result.current.handlePasswordVisibilityChange(false);
-    });
-    expect(result.current.isPasswordVisible).toBe(false);
-  });
-
-  it("keeps password hidden when called with indeterminate", () => {
-    const { result } = renderHook(() => useLoginForm(), { wrapper });
-    act(() => {
-      result.current.handlePasswordVisibilityChange("indeterminate");
+      result.current.togglePasswordVisibility();
+      result.current.togglePasswordVisibility();
     });
     expect(result.current.isPasswordVisible).toBe(false);
   });

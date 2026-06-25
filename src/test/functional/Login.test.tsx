@@ -21,13 +21,16 @@ const renderLoginPage = () =>
 describe("Login page — rendering", () => {
   it("renders the brand logo", () => {
     renderLoginPage();
-    expect(screen.getByText("ALL")).toBeInTheDocument();
-    expect(screen.getByText("BUY")).toBeInTheDocument();
+    // Both desktop aside panel and mobile fallback render the brand
+    expect(screen.getAllByText("ALL").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("BUY").length).toBeGreaterThanOrEqual(1);
   });
 
   it("renders the login heading", () => {
     renderLoginPage();
-    expect(screen.getByRole("heading", { name: /login/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /bem-vindo de volta/i })
+    ).toBeInTheDocument();
   });
 
   it("renders email and password fields", () => {
@@ -38,17 +41,23 @@ describe("Login page — rendering", () => {
 
   it("renders the submit button", () => {
     renderLoginPage();
-    expect(screen.getByRole("button", { name: /entrar/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /entrar/i })
+    ).toBeInTheDocument();
   });
 
   it("renders the register link", () => {
     renderLoginPage();
-    expect(screen.getByRole("link", { name: /cadastrar-se/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /cadastrar-se/i })
+    ).toBeInTheDocument();
   });
 
-  it("renders the show password checkbox", () => {
+  it("renders the password visibility toggle button", () => {
     renderLoginPage();
-    expect(screen.getByRole("checkbox")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Mostrar senha" })
+    ).toBeInTheDocument();
   });
 });
 
@@ -58,16 +67,16 @@ describe("Login page — password visibility", () => {
     expect(screen.getByLabelText("Senha")).toHaveAttribute("type", "password");
   });
 
-  it("reveals password when checkbox is checked", async () => {
+  it("reveals password when toggle button is clicked", async () => {
     renderLoginPage();
-    await userEvent.click(screen.getByRole("checkbox"));
+    await userEvent.click(screen.getByRole("button", { name: "Mostrar senha" }));
     expect(screen.getByLabelText("Senha")).toHaveAttribute("type", "text");
   });
 
-  it("hides password again when checkbox is unchecked", async () => {
+  it("hides password again when toggle button is clicked twice", async () => {
     renderLoginPage();
-    await userEvent.click(screen.getByRole("checkbox"));
-    await userEvent.click(screen.getByRole("checkbox"));
+    await userEvent.click(screen.getByRole("button", { name: "Mostrar senha" }));
+    await userEvent.click(screen.getByRole("button", { name: "Ocultar senha" }));
     expect(screen.getByLabelText("Senha")).toHaveAttribute("type", "password");
   });
 });
@@ -188,7 +197,9 @@ describe("Login page — form submission", () => {
     await userEvent.click(screen.getByRole("button", { name: /entrar/i }));
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /entrar/i })).not.toBeDisabled();
+      expect(
+        screen.getByRole("button", { name: /entrar/i })
+      ).not.toBeDisabled();
     });
   });
 
@@ -230,10 +241,9 @@ describe("Login page — form submission", () => {
 describe("Login page — navigation", () => {
   it("register link points to /cadastro", () => {
     renderLoginPage();
-    expect(screen.getByRole("link", { name: /cadastrar-se/i })).toHaveAttribute(
-      "href",
-      "/cadastro"
-    );
+    expect(
+      screen.getByRole("link", { name: /cadastrar-se/i })
+    ).toHaveAttribute("href", "/cadastro");
   });
 
   it("navigates to register page when link is clicked", async () => {
