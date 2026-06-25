@@ -1,3 +1,9 @@
+# Env — todos os arquivos reais ficam em envs/, nunca na raiz
+.env
+.env.*
+envs/.env*
+!envs/.env.example
+
 # Logs
 logs
 *.log
