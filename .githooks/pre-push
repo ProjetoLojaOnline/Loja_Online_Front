@@ -1,0 +1,58 @@
+#!/bin/sh
+# Executado automaticamente antes de cada git push.
+# Para configurar: npm run setup-hooks
+
+# 1. Lint (ESLint)
+printf "Verificando codigo com ESLint...\n"
+LINT_OUTPUT=$(npm run lint 2>&1)
+LINT_EXIT=$?
+
+if [ $LINT_EXIT -ne 0 ]; then
+  printf "\nERRO: violacoes de lint encontradas.\n"
+  echo "$LINT_OUTPUT" | grep -E "error|warning" | head -10 | sed 's/^/   /'
+  printf "\n   Solucao: rode  npm run lint:fix  e faca commit das correcoes.\n\n"
+  exit 1
+fi
+printf "Lint OK.\n"
+
+# 2. TypeScript (verificacao de tipos)
+printf "Verificando tipos TypeScript...\n"
+TYPE_OUTPUT=$(npx tsc --noEmit 2>&1)
+TYPE_EXIT=$?
+
+if [ $TYPE_EXIT -ne 0 ]; then
+  printf "\nERRO: erros de tipo TypeScript encontrados.\n"
+  echo "$TYPE_OUTPUT" | head -15 | sed 's/^/   /'
+  printf "\n   Corrija os erros e tente novamente.\n\n"
+  exit 1
+fi
+printf "Tipos OK.\n"
+
+# 3. Testes (Vitest)
+printf "Rodando testes...\n"
+TEST_OUTPUT=$(npm run test:run 2>&1)
+TEST_EXIT=$?
+
+if [ $TEST_EXIT -ne 0 ]; then
+  printf "\nERRO: testes falharam. Push bloqueado.\n"
+  echo "$TEST_OUTPUT" | tail -20 | sed 's/^/   /'
+  printf "\n   Corrija os testes e tente novamente.\n\n"
+  exit 1
+fi
+printf "Testes OK.\n"
+
+# 4. Build (Vite)
+printf "Verificando se o build passa...\n"
+BUILD_OUTPUT=$(npm run build 2>&1)
+BUILD_EXIT=$?
+
+if [ $BUILD_EXIT -ne 0 ]; then
+  printf "\nERRO: build falhou. Push bloqueado.\n"
+  echo "$BUILD_OUTPUT" | tail -20 | sed 's/^/   /'
+  printf "\n   Corrija os erros e tente novamente.\n\n"
+  exit 1
+fi
+printf "Build OK.\n"
+
+printf "\nTodas as verificacoes passaram! Prosseguindo com o push...\n\n"
+exit 0
