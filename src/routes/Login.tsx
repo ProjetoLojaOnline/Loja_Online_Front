@@ -1,15 +1,15 @@
-import { Link, useSearchParams } from "react-router";
-import { EyeIcon, EyeOffIcon, CheckCircleIcon } from "lucide-react";
+import { CheckCircleIcon, EyeIcon, EyeOffIcon } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router';
 
-import { useLoginForm } from "@/hooks/useLoginForm";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { AuthBrandPanel } from "@/components/common/AuthBrandPanel";
+import { AuthBrandPanel } from '@/components/common/AuthBrandPanel';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useLoginForm } from '@/hooks/useLoginForm';
 
 const Login = () => {
   const [searchParams] = useSearchParams();
-  const justRegistered = searchParams.get("registered") === "true";
+  const justRegistered = searchParams.get('registered') === 'true';
 
   const {
     email,
@@ -25,10 +25,10 @@ const Login = () => {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
-      <AuthBrandPanel />
+      <AuthBrandPanel widthClass="md:w-[40%]" />
 
       {/* Form panel */}
-      <main className="flex flex-1 flex-col items-center justify-center bg-white px-8 py-12">
+      <main className="flex flex-1 flex-col items-center justify-center overflow-y-auto bg-white px-8 py-12">
         {/* Mobile-only brand */}
         <div className="mb-8 flex flex-col items-center gap-2 md:hidden">
           <div className="text-4xl font-semibold text-[var(--color-brand-dark)]">
@@ -78,7 +78,7 @@ const Login = () => {
                 <Input
                   id="password"
                   name="password"
-                  type={isPasswordVisible ? "text" : "password"}
+                  type={isPasswordVisible ? 'text' : 'password'}
                   placeholder="••••••••"
                   autoComplete="current-password"
                   required
@@ -89,7 +89,9 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={togglePasswordVisibility}
-                  aria-label={isPasswordVisible ? "Ocultar senha" : "Mostrar senha"}
+                  aria-label={
+                    isPasswordVisible ? 'Ocultar senha' : 'Mostrar senha'
+                  }
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
                 >
                   {isPasswordVisible ? (
@@ -112,11 +114,11 @@ const Login = () => {
               disabled={isSubmitting}
               className="mt-1 w-full"
             >
-              {isSubmitting ? "Entrando..." : "Entrar"}
+              {isSubmitting ? 'Entrando...' : 'Entrar'}
             </Button>
 
             <p className="text-center text-sm text-gray-500">
-              Ainda não tem conta?{" "}
+              Ainda não tem conta?{' '}
               <Link
                 to="/cadastro"
                 className="font-semibold text-[var(--color-brand-blue-primary)] hover:underline"
