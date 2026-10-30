@@ -1,202 +1,191 @@
-import { renderHook, act } from "@testing-library/react";
-import { type ReactNode, type ChangeEvent, type FormEvent } from "react";
-import { MemoryRouter } from "react-router";
-
-import { useRegisterForm } from "@/hooks/useRegisterForm";
+import { useRegisterForm } from '@/hooks/useRegisterForm';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import type { ReactNode } from 'react';
+import { BrowserRouter } from 'react-router';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const wrapper = ({ children }: { children: ReactNode }) => (
-  <MemoryRouter initialEntries={["/cadastro"]}>{children}</MemoryRouter>
+  <BrowserRouter>{children}</BrowserRouter>
 );
 
-const makeInputEvent = (name: string, value: string) =>
-  ({ target: { name, value } }) as ChangeEvent<HTMLInputElement>;
-
-const makeSubmitEvent = () =>
-  ({ preventDefault: vi.fn() }) as unknown as FormEvent<HTMLFormElement>;
-
-const fillRequiredFields = (
-  handleChange: (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void
+const fillRequiredFormFields = (
+  result: ReturnType<
+    typeof renderHook<ReturnType<typeof useRegisterForm>, unknown>
+  >['result']
 ) => {
-  handleChange(makeInputEvent("nome", "João da Silva"));
-  handleChange(makeInputEvent("email", "joao@email.com"));
-  handleChange(makeInputEvent("cpf", "12345678901"));
-  handleChange(makeInputEvent("telefone", "11999990000"));
-  handleChange(makeInputEvent("loginUsername", "joaosilva"));
-  handleChange(makeInputEvent("password", "senha123"));
-  handleChange(makeInputEvent("confirmPassword", "senha123"));
+  act(() => {
+    result.current.form.setValue('nome', 'João da Silva');
+    result.current.form.setValue('email', 'joao@email.com');
+    result.current.form.setValue('cpf', '123.456.789-01');
+    result.current.form.setValue('telefone', '(11) 99999-0000');
+    result.current.form.setValue('endereco', 'Rua A, 123');
+    result.current.form.setValue('loginUsername', 'joaosilva');
+    result.current.form.setValue('password', 'senha123');
+    result.current.form.setValue('confirmPassword', 'senha123');
+  });
 };
 
-describe("useRegisterForm — initial state", () => {
-  it("starts with all fields empty", () => {
+describe('useRegisterForm hook — initial state', () => {
+  it('starts with all fields empty', () => {
     const { result } = renderHook(() => useRegisterForm(), { wrapper });
-    expect(result.current.formData.nome).toBe("");
-    expect(result.current.formData.email).toBe("");
-    expect(result.current.formData.cpf).toBe("");
-    expect(result.current.formData.telefone).toBe("");
-    expect(result.current.formData.loginUsername).toBe("");
-    expect(result.current.formData.password).toBe("");
-    expect(result.current.formData.confirmPassword).toBe("");
+    const values = result.current.form.getValues();
+    expect(values.nome).toBe('');
+    expect(values.email).toBe('');
+    expect(values.cpf).toBe('');
+    expect(values.telefone).toBe('');
+    expect(values.endereco).toBe('');
+    expect(values.loginUsername).toBe('');
+    expect(values.password).toBe('');
+    expect(values.confirmPassword).toBe('');
   });
 
-  it("starts with passwordMismatch false", () => {
-    const { result } = renderHook(() => useRegisterForm(), { wrapper });
-    expect(result.current.passwordMismatch).toBe(false);
-  });
-
-  it("starts with password hidden", () => {
+  it('starts with password hidden', () => {
     const { result } = renderHook(() => useRegisterForm(), { wrapper });
     expect(result.current.isPasswordVisible).toBe(false);
   });
 
-  it("starts with no error and not submitting", () => {
+  it('starts with no generic error and not submitting', () => {
     const { result } = renderHook(() => useRegisterForm(), { wrapper });
-    expect(result.current.errorMessage).toBeNull();
+    expect(result.current.genericError).toBeNull();
     expect(result.current.isSubmitting).toBe(false);
   });
 });
 
-describe("useRegisterForm — field updates", () => {
-  it("updates form fields when handleChange is called", () => {
+describe('useRegisterForm hook — field updates and handlers', () => {
+  it('updates form fields when setValue is called', () => {
     const { result } = renderHook(() => useRegisterForm(), { wrapper });
     act(() => {
-      result.current.handleChange(makeInputEvent("nome", "Maria Silva"));
+      result.current.form.setValue('nome', 'Maria Silva');
     });
-    expect(result.current.formData.nome).toBe("Maria Silva");
+    expect(result.current.form.getValues().nome).toBe('Maria Silva');
   });
 
-  it("toggles password visibility", () => {
+  it('toggles password visibility', () => {
     const { result } = renderHook(() => useRegisterForm(), { wrapper });
     act(() => result.current.togglePasswordVisibility());
     expect(result.current.isPasswordVisible).toBe(true);
     act(() => result.current.togglePasswordVisibility());
     expect(result.current.isPasswordVisible).toBe(false);
   });
-});
 
-describe("useRegisterForm — passwordMismatch", () => {
-  it("passwordMismatch is false when passwords match", () => {
-    const { result } = renderHook(() => useRegisterForm(), { wrapper });
-    act(() => fillRequiredFields(result.current.handleChange));
-    expect(result.current.passwordMismatch).toBe(false);
-  });
-
-  it("passwordMismatch is true when confirm password differs from password", () => {
+  it('formats CPF correctly via handleCpfChange', () => {
     const { result } = renderHook(() => useRegisterForm(), { wrapper });
     act(() => {
-      fillRequiredFields(result.current.handleChange);
-      result.current.handleChange(makeInputEvent("confirmPassword", "outrasenha"));
+      const event = {
+        target: { value: '12345678901' },
+      } as React.ChangeEvent<HTMLInputElement>;
+      result.current.handleCpfChange(event);
     });
-    expect(result.current.passwordMismatch).toBe(true);
+    expect(result.current.form.getValues().cpf).toBe('123.456.789-01');
   });
 
-  it("passwordMismatch is false when confirmPassword is still empty", () => {
+  it('formats phone correctly via handlePhoneChange', () => {
     const { result } = renderHook(() => useRegisterForm(), { wrapper });
     act(() => {
-      result.current.handleChange(makeInputEvent("password", "senha123"));
+      const event = {
+        target: { value: '11999990000' },
+      } as React.ChangeEvent<HTMLInputElement>;
+      result.current.handlePhoneChange(event);
     });
-    expect(result.current.passwordMismatch).toBe(false);
-  });
-
-  it("does not call fetch when passwords do not match", async () => {
-    vi.stubGlobal("fetch", vi.fn());
-    const { result } = renderHook(() => useRegisterForm(), { wrapper });
-    act(() => {
-      fillRequiredFields(result.current.handleChange);
-      result.current.handleChange(makeInputEvent("confirmPassword", "outrasenha"));
-    });
-    await act(async () => {
-      await result.current.handleSubmit(makeSubmitEvent());
-    });
-    expect(fetch).not.toHaveBeenCalled();
-    expect(result.current.errorMessage).toBeNull();
-    vi.unstubAllGlobals();
+    expect(result.current.form.getValues().telefone).toBe('(11) 99999-0000');
   });
 });
 
-describe("useRegisterForm — submission", () => {
-  beforeEach(() => vi.stubGlobal("fetch", vi.fn()));
+describe('useRegisterForm hook — submission', () => {
+  beforeEach(() => vi.stubGlobal('fetch', vi.fn()));
   afterEach(() => vi.unstubAllGlobals());
 
-  it("calls fetch with correct request body on valid submission", async () => {
+  it('calls fetch with correct request body on valid submission', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       new Response(JSON.stringify({ id: 1 }), { status: 201 })
     );
     const { result } = renderHook(() => useRegisterForm(), { wrapper });
-    act(() => fillRequiredFields(result.current.handleChange));
+    fillRequiredFormFields(result);
+
     await act(async () => {
-      await result.current.handleSubmit(makeSubmitEvent());
+      await result.current.onSubmit({
+        preventDefault: () => {},
+      } as React.FormEvent<HTMLFormElement>);
     });
 
     expect(fetch).toHaveBeenCalledOnce();
     const body = JSON.parse(
       (vi.mocked(fetch).mock.calls[0][1] as RequestInit).body as string
     ) as {
-      usuario: { nome: string; email: string; cpf: string; telefone: string };
+      usuario: {
+        nome: string;
+        email: string;
+        cpf: string;
+        telefone: string;
+        enderecos: { logradouro: string }[];
+      };
       login: { login: string; senha: string };
     };
-    expect(body.usuario.nome).toBe("João da Silva");
-    expect(body.usuario.email).toBe("joao@email.com");
-    expect(body.usuario.cpf).toBe("12345678901");
-    expect(body.login.login).toBe("joaosilva");
-    expect(body.login.senha).toBe("senha123");
+    expect(body.usuario.nome).toBe('João da Silva');
+    expect(body.usuario.email).toBe('joao@email.com');
+    expect(body.usuario.cpf).toBe('12345678901');
+    expect(body.usuario.telefone).toBe('11999990000');
+    expect(body.usuario.enderecos[0].logradouro).toBe('Rua A, 123');
+    expect(body.login.login).toBe('joaosilva');
+    expect(body.login.senha).toBe('senha123');
   });
 
-  it("sends only digits for CPF and telefone", async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(JSON.stringify({ id: 1 }), { status: 201 })
-    );
-    const { result } = renderHook(() => useRegisterForm(), { wrapper });
-    act(() => {
-      fillRequiredFields(result.current.handleChange);
-      result.current.handleChange(makeInputEvent("cpf", "123.456.789-01"));
-      result.current.handleChange(makeInputEvent("telefone", "(11) 99999-0000"));
-    });
-    await act(async () => {
-      await result.current.handleSubmit(makeSubmitEvent());
-    });
-
-    const body = JSON.parse(
-      (vi.mocked(fetch).mock.calls[0][1] as RequestInit).body as string
-    ) as { usuario: { cpf: string; telefone: string } };
-    expect(body.usuario.cpf).toBe("12345678901");
-    expect(body.usuario.telefone).toBe("11999990000");
-  });
-
-  it("sets errorMessage from backend on 409 Conflict", async () => {
+  it('maps 409 Conflict message to specific field instead of genericError', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       new Response(
-        JSON.stringify({ message: "Este e-mail já está cadastrado!" }),
-        { status: 409, headers: { "Content-Type": "application/json" } }
+        JSON.stringify({ message: 'Este e-mail já está cadastrado!' }),
+        { status: 409, headers: { 'Content-Type': 'application/json' } }
       )
     );
+
     const { result } = renderHook(() => useRegisterForm(), { wrapper });
-    act(() => fillRequiredFields(result.current.handleChange));
+
+    expect(result.current.form.formState.errors).toBeDefined();
+
+    fillRequiredFormFields(result);
+
     await act(async () => {
-      await result.current.handleSubmit(makeSubmitEvent());
+      await result.current.onSubmit({
+        preventDefault: () => {},
+      } as React.FormEvent<HTMLFormElement>);
     });
-    expect(result.current.errorMessage).toBe("Este e-mail já está cadastrado!");
+
+    expect(result.current.genericError).toBeNull();
+
+    // Aguardar a propagação assíncrona do erro mapeado via setError
+    await waitFor(() => {
+      expect(result.current.form.formState.errors.email?.message).toBe(
+        'Este e-mail já está cadastrado!'
+      );
+    });
   });
 
-  it("resets isSubmitting to false after successful submission", async () => {
+  it('resets isSubmitting to false after successful submission', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       new Response(JSON.stringify({ id: 1 }), { status: 201 })
     );
     const { result } = renderHook(() => useRegisterForm(), { wrapper });
-    act(() => fillRequiredFields(result.current.handleChange));
+    fillRequiredFormFields(result);
+
     await act(async () => {
-      await result.current.handleSubmit(makeSubmitEvent());
+      await result.current.onSubmit({
+        preventDefault: () => {},
+      } as React.FormEvent<HTMLFormElement>);
     });
     expect(result.current.isSubmitting).toBe(false);
   });
 
-  it("resets isSubmitting to false after failed submission", async () => {
+  it('resets isSubmitting to false after failed submission', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response(JSON.stringify({ message: "Error" }), { status: 400 })
+      new Response(JSON.stringify({ message: 'Error' }), { status: 400 })
     );
     const { result } = renderHook(() => useRegisterForm(), { wrapper });
-    act(() => fillRequiredFields(result.current.handleChange));
+    fillRequiredFormFields(result);
+
     await act(async () => {
-      await result.current.handleSubmit(makeSubmitEvent());
+      await result.current.onSubmit({
+        preventDefault: () => {},
+      } as React.FormEvent<HTMLFormElement>);
     });
     expect(result.current.isSubmitting).toBe(false);
   });
