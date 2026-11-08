@@ -11,6 +11,7 @@ import { roleToPath } from "@/lib/roleNavigation";
 
 import Login from "@/routes/Login";
 import Register from "@/routes/Register";
+import RegisterSeller from "./routes/RegisterSeller";
 import UserDashboard from "@/routes/UserDashboard";
 import SellerDashboard from "@/routes/SellerDashboard";
 import AdminDashboard from "@/routes/AdminDashboard";
@@ -40,6 +41,14 @@ createRoot(document.getElementById("root")!).render(
             element={
               <PublicOnlyRoute>
                 <Register />
+              </PublicOnlyRoute>
+            }
+          />
+          <Route
+            path="/cadastro-vendedor"
+            element={
+              <PublicOnlyRoute>
+                <RegisterSeller />
               </PublicOnlyRoute>
             }
           />
