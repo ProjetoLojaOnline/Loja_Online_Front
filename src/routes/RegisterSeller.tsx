@@ -8,9 +8,8 @@ const RegisterSeller = () => {
     <div className="flex h-screen w-screen overflow-hidden">
       <AuthBrandPanel widthClass="md:w-[40%]" />
 
-      {/* Form panel */}
-      <main className="flex flex-1 flex-col items-center justify-center overflow-y-auto bg-white px-8 py-12">
-        {/* Mobile-only brand — idêntico ao Register.tsx */}
+      <main className="flex flex-1 flex-col items-center justify-start overflow-y-auto bg-white px-8 py-12">
+
         <div className="mb-6 flex flex-col items-center md:hidden">
           <div className="text-4xl font-semibold text-[var(--color-brand-dark)]">
             ALL
@@ -18,7 +17,7 @@ const RegisterSeller = () => {
           </div>
         </div>
 
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-md pb-12">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-[var(--color-brand-dark)]">
               Cadastro de vendedor
