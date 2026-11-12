@@ -1,5 +1,3 @@
-import { Link } from "react-router";
-
 import { AuthBrandPanel } from "@/components/common/AuthBrandPanel";
 import { SellerForm } from "@/components/sellerForm";
 
@@ -29,15 +27,7 @@ const RegisterSeller = () => {
 
           <SellerForm />
 
-          <p className="mt-4 text-center text-sm text-gray-500">
-            Já tem uma conta?{" "}
-            <Link
-              to="/login"
-              className="font-semibold text-[var(--color-brand-blue-primary)] hover:underline"
-            >
-              Entrar
-            </Link>
-          </p>
+
         </div>
       </main>
     </div>

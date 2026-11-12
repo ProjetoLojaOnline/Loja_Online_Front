@@ -47,9 +47,9 @@ createRoot(document.getElementById("root")!).render(
           <Route
             path="/cadastro-vendedor"
             element={
-              <PublicOnlyRoute>
+              <ProtectedRoute allowedRoles={["ROLE_VENDEDOR"]}>
                 <RegisterSeller />
-              </PublicOnlyRoute>
+              </ProtectedRoute>
             }
           />
 
